@@ -86,6 +86,7 @@ jobs:
         with:
           repository: ReiZen-Team/TouhouLostWordClientAPI
           path: source_repo
+          token: ${{ secrets.GH_TOKEN }}
 
       - name: Synchronize source code
         shell: pwsh
