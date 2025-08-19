@@ -1,0 +1,139 @@
+name: Build Touhou LostWord ClientAPI
+
+on:
+#   push:
+#     branches: [ "main" ]
+#   pull_request:
+#     branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  VCPKG_COMMIT_ID: 'dd3097e305afa53f7b4312371f62058d2e665320'
+
+jobs:
+  build-ubuntu-latest:
+    name: Ubuntu (Latest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - uses: actions/checkout@v4
+        with:
+          repository: ReiZen-Team/TouhouLostWordClientAPI
+          path: source_repo
+
+      - name: Synchronize source code
+        run: rsync -av source_repo/CPP/ .
+
+      - name: Cài đặt GCC 12
+        run: |
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+          sudo apt-get update
+          sudo apt-get install -y gcc-12 g++-12
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 60 --slave /usr/bin/g++ g++ /usr/bin/g++-12
+
+      - name: Cài đặt Build Dependencies
+        run: |
+          sudo apt-get install -y libssl-dev zlib1g-dev wget
+
+      - name: Cache pre-built libraries
+        id: cache-libs
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/lib
+          key: ${{ runner.os }}-built-libs-iconv-1.17-unistring-1.2
+          
+      - name: Build và cài đặt libiconv (static)
+        if: steps.cache-libs.outputs.cache-hit != 'true'
+        run: |
+          wget -O libiconv.tar.gz https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.17.tar.gz
+          tar -xf libiconv.tar.gz
+          cd libiconv-1.17
+          ./configure --prefix=/usr/local --enable-static --disable-shared
+          make -j$(nproc)
+          sudo make install
+          cd ..
+      - name: Build và cài đặt libunistring (static)
+        if: steps.cache-libs.outputs.cache-hit != 'true'
+        run: |
+          wget -O libunistring.tar.gz https://ftp.gnu.org/pub/gnu/libunistring/libunistring-1.2.tar.gz
+          tar -xf libunistring.tar.gz
+          cd libunistring-1.2
+          ./configure --prefix=/usr/local --enable-static --disable-shared
+          make -j$(nproc)
+          sudo make install
+          cd ..
+      - name: Cài đặt Meson và Ninja (pip)
+        run: pip install meson ninja
+        
+      - name: Cấu hình CMake
+        run: cmake -B ${{github.workspace}}/build -S ${{github.workspace}} -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --config Release
+        
+      - name: Tải lên Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TouhouLWClient-ubuntu-latest
+          path: ${{github.workspace}}/build/TouhouLWClient
+
+  build-windows:
+    name: Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ReiZen-Team/TouhouLostWordClientAPI
+          path: source_repo
+
+      - name: Synchronize source code
+        shell: pwsh
+        run: Copy-Item -Path source_repo/CPP/* -Destination . -Recurse -Force
+
+      - uses: TheMrMilchmann/setup-msvc-dev@v3
+        with:
+          arch: x64
+          
+      - name: Cài đặt Meson và Ninja (pip)
+        run: pip install meson ninja
+
+      - name: Cache vcpkg dependencies
+        id: cache-vcpkg
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/vcpkg
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json') }}-${{ env.VCPKG_COMMIT_ID }}
+
+      - name: Install dependencies
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
+        uses: lukka/run-vcpkg@v11
+        env:
+          VCPKG_DEFAULT_TRIPLET: x64-windows-static
+          VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static
+        with:
+          runVcpkgInstall: true
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+          vcpkgDirectory: ${{ runner.temp }}/vcpkg
+          
+      - name: Cấu hình CMake
+        env:
+          VCPKG_TARGET_TRIPLET: x64-windows-static
+        run: |
+          cmake -B build -S . `
+            -G "Ninja" `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_TOOLCHAIN_FILE=${{ runner.temp }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Tải lên Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TouhouLWClient-windows
+          path: ${{github.workspace}}/build/**/TouhouLWClient.exe

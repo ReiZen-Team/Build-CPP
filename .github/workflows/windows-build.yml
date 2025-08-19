@@ -1,0 +1,151 @@
+name: Build Touhou LostWord ClientAPI with Hikari (Windows)
+
+on:
+#   push:
+#     branches: [ "main" ]
+#   pull_request:
+#     branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  HIKARI_COMMIT_HASH: 'dfb9a48616df758fae88acf7fc426b9b208ba30d'
+
+jobs:
+  build-hikari-toolchain:
+    name: Build Hikari LLVM Toolchain from Source
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - uses: TheMrMilchmann/setup-msvc-dev@v3
+        with:
+          arch: x64
+
+      - name: Cache Hikari LLVM Toolchain
+        id: cache-hikari
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/hikari-install
+
+          key: ${{ runner.os }}-hikari-${{ env.HIKARI_COMMIT_HASH }}-v3
+
+      - name: Build and Install Hikari LLVM
+        if: steps.cache-hikari.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          echo "Cache not found, building Hikari LLVM from source. This will take a very long time..."
+          
+          git clone --recursive https://github.com/Aethereux/Hikari-LLVM19.git hikari-source
+          cd hikari-source
+          git checkout ${{ env.HIKARI_COMMIT_HASH }}
+          
+          mkdir build
+          cd build
+          
+          # SỬA LỖI: Thêm CMAKE_INSTALL_PREFIX và build cả 'lld'
+          cmake -G Ninja `
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/hikari-install `
+            -DCMAKE_C_COMPILER=cl.exe `
+            -DCMAKE_CXX_COMPILER=cl.exe `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded `
+            -DCMAKE_CXX_FLAGS="/MT" `
+            -DLLVM_ENABLE_PROJECTS="clang;lld" `
+            -DLLVM_TARGETS_TO_BUILD="X86" `
+            -DLLVM_ENABLE_ZSTD=OFF `
+            -DLLVM_INCLUDE_TESTS=OFF `
+            -DLLVM_INCLUDE_EXAMPLES=OFF `
+            -DLLVM_INCLUDE_UTILS=OFF `
+            -DLLVM_INCLUDE_BENCHMARKS=OFF `
+            -DLLVM_BUILD_TOOLS=OFF `
+            ../llvm
+            
+          ninja
+          
+          ninja install
+
+      - name: 5. Upload Hikari Toolchain as Artifact
+        if: steps.cache-hikari.outputs.cache-hit != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: hikari-toolchain-windows
+          path: ${{ github.workspace }}/hikari-install
+
+  build-windows-app:
+    name: Windows (with Hikari LLVM)
+    runs-on: windows-latest
+    needs: build-hikari-toolchain
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - uses: actions/checkout@v4
+        with:
+          repository: ReiZen-Team/TouhouLostWordClientAPI
+          path: source_repo
+
+      - name: Synchronize source code
+        shell: pwsh
+        run: Copy-Item -Path source_repo/CPP/* -Destination . -Recurse -Force
+      
+      - name: Restore Hikari Toolchain from Cache or Artifact
+        id: restore-hikari
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/hikari-install
+
+          key: ${{ runner.os }}-hikari-${{ env.HIKARI_COMMIT_HASH }}-v3
+
+      - name: Download Artifact if Cache Missed
+        if: steps.restore-hikari.outputs.cache-hit != 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: hikari-toolchain-windows
+          path: hikari-install
+
+      - name: Set Hikari Environment Path
+        shell: pwsh
+        run: |
+          $hikariBinPath = "${{ github.workspace }}\hikari-install\bin"
+          echo "HIKARI_BIN_PATH=$hikariBinPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo $hikariBinPath | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Cài đặt Meson và Ninja (pip)
+        run: pip install meson ninja
+
+      - name: Cài đặt dependencies với vcpkg
+        uses: lukka/run-vcpkg@v11
+        env:
+          VCPKG_BUILD_TYPE: release
+          VCPKG_DEFAULT_TRIPLET: x64-windows-static-clang
+          VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static-clang
+          VCPKG_OVERLAY_TRIPLETS: ${{ github.workspace }}/triplets
+        with:
+          runVcpkgInstall: true
+          vcpkgGitCommitId: 'dd3097e305afa53f7b4312371f62058d2e665320'
+          vcpkgDirectory: ${{ runner.temp }}/vcpkg
+
+      - name: Cấu hình CMake với Hikari LLVM
+        env:
+          VCPKG_TARGET_TRIPLET: x64-windows-static-clang
+        run: |
+          cmake -B build -S . `
+            -G "Ninja" `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_TOOLCHAIN_FILE=${{ runner.temp }}/vcpkg/scripts/buildsystems/vcpkg.cmake `
+            -DCMAKE_C_COMPILER="$env:HIKARI_BIN_PATH\clang-cl.exe" `
+            -DCMAKE_CXX_COMPILER="$env:HIKARI_BIN_PATH\clang-cl.exe" `
+            -DCMAKE_LINKER="$env:HIKARI_BIN_PATH\lld-link.exe" `
+            -DCMAKE_AR="$env:HIKARI_BIN_PATH\llvm-lib.exe" `
+            -DCMAKE_CXX_FLAGS="-mllvm -enable-bcfobf -mllvm -bcf_prob=80 -mllvm -enable-strcry -mllvm -enable-constenc -mllvm -constenc_times=3 -mllvm -enable-indibran -mllvm -enable-funcwra -mllvm -fw_prob=80 -mllvm -enable-adb -mllvm -adb_prob=90 -mllvm -enable-antihook -mllvm -ah_inline"
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Tải lên Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TouhouLWClient-windows-hikari
+          path: ${{github.workspace}}/build/**/TouhouLWClient.exe

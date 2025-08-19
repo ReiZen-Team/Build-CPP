@@ -1,0 +1,10 @@
+{
+  "name": "touhoulwclient",
+  "version-string": "1.0.1",
+  "dependencies": [
+    "openssl",
+    "zlib",
+    "libiconv",
+    "libunistring"
+  ]
+}
