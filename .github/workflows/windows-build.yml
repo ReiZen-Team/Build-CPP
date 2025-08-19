@@ -9,6 +9,7 @@ on:
 
 env:
   HIKARI_COMMIT_HASH: 'dfb9a48616df758fae88acf7fc426b9b208ba30d'
+  VCPKG_COMMIT_ID: 'dd3097e305afa53f7b4312371f62058d2e665320'
 
 jobs:
   build-hikari-toolchain:
@@ -114,7 +115,15 @@ jobs:
       - name: Cài đặt Meson và Ninja (pip)
         run: pip install meson ninja
 
+      - name: Cache vcpkg dependencies
+        id: cache-vcpkg
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/vcpkg
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json') }}-${{ env.VCPKG_COMMIT_ID }}-hikari
+
       - name: Cài đặt dependencies với vcpkg
+        if: steps.cache-vcpkg.outputs.cache-hit != 'true'
         uses: lukka/run-vcpkg@v11
         env:
           VCPKG_BUILD_TYPE: release
@@ -123,7 +132,7 @@ jobs:
           VCPKG_OVERLAY_TRIPLETS: ${{ github.workspace }}/triplets
         with:
           runVcpkgInstall: true
-          vcpkgGitCommitId: 'dd3097e305afa53f7b4312371f62058d2e665320'
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
           vcpkgDirectory: ${{ runner.temp }}/vcpkg
 
       - name: Cấu hình CMake với Hikari LLVM
