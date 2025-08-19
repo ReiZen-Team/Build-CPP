@@ -66,12 +66,12 @@ jobs:
           
           ninja install
 
-      - name: 5. Upload Hikari Toolchain as Artifact
-        if: steps.cache-hikari.outputs.cache-hit != 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: hikari-toolchain-windows
-          path: ${{ github.workspace }}/hikari-install
+#       - name: 5. Upload Hikari Toolchain as Artifact
+#         if: steps.cache-hikari.outputs.cache-hit != 'true'
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: hikari-toolchain-windows
+#           path: ${{ github.workspace }}/hikari-install
 
   build-windows-app:
     name: Windows (with Hikari LLVM)
@@ -92,6 +92,10 @@ jobs:
         shell: pwsh
         run: Copy-Item -Path source_repo/CPP/* -Destination . -Recurse -Force
       
+      - uses: TheMrMilchmann/setup-msvc-dev@v3
+        with:
+          arch: x64
+      
       - name: Restore Hikari Toolchain from Cache or Artifact
         id: restore-hikari
         uses: actions/cache@v4
@@ -100,19 +104,13 @@ jobs:
 
           key: ${{ runner.os }}-hikari-${{ env.HIKARI_COMMIT_HASH }}-v3
 
-      - name: Download Artifact if Cache Missed
-        if: steps.restore-hikari.outputs.cache-hit != 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: hikari-toolchain-windows
-          path: hikari-install
-
       - name: Set Hikari Environment Path
         shell: pwsh
         run: |
           $hikariBinPath = "${{ github.workspace }}\hikari-install\bin"
           echo "HIKARI_BIN_PATH=$hikariBinPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo $hikariBinPath | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          
       - name: Cài đặt Meson và Ninja (pip)
         run: pip install meson ninja
 
@@ -120,8 +118,8 @@ jobs:
         uses: lukka/run-vcpkg@v11
         env:
           VCPKG_BUILD_TYPE: release
-          VCPKG_DEFAULT_TRIPLET: x64-windows-static-clang
-          VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static-clang
+          VCPKG_DEFAULT_TRIPLET: x64-windows-static
+          VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static
           VCPKG_OVERLAY_TRIPLETS: ${{ github.workspace }}/triplets
         with:
           runVcpkgInstall: true
@@ -130,7 +128,7 @@ jobs:
 
       - name: Cấu hình CMake với Hikari LLVM
         env:
-          VCPKG_TARGET_TRIPLET: x64-windows-static-clang
+          VCPKG_TARGET_TRIPLET: x64-windows-static
         run: |
           cmake -B build -S . `
             -G "Ninja" `
