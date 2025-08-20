@@ -11,7 +11,9 @@ env:
   HIKARI_COMMIT_HASH: 'dfb9a48616df758fae88acf7fc426b9b208ba30d'
   VCPKG_COMMIT_ID: 'dd3097e305afa53f7b4312371f62058d2e665320'
   REVERSION:
-    '2'
+    '1'
+  VCPKG_REVERSION:
+    '1'
 
 jobs:
   build-hikari-toolchain:
@@ -123,7 +125,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/vcpkg
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json') }}-${{ env.VCPKG_COMMIT_ID }}
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json') }}-${{ env.VCPKG_COMMIT_ID }}-${{ env.VCPKG_REVERSION }}
 
       - name: Cài đặt dependencies với vcpkg
         if: steps.cache-vcpkg.outputs.cache-hit != 'true'
