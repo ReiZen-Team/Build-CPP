@@ -166,7 +166,6 @@ jobs:
           CMAKE_MESSAGE_LOG_LEVEL: ERROR
         run: |
           cmake -B build -S . `
-            -G "Ninja" `
             -DCMAKE_BUILD_TYPE=Release `
             -DCMAKE_TOOLCHAIN_FILE=${{ runner.temp }}/vcpkg/scripts/buildsystems/vcpkg.cmake `
             -DCMAKE_C_COMPILER="$env:HIKARI_BIN_PATH\clang-cl.exe" `
