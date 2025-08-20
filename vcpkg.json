@@ -5,6 +5,7 @@
     "openssl",
     "zlib",
     "libiconv",
-    "libunistring"
+    "libunistring",
+    "cpr"
   ]
 }

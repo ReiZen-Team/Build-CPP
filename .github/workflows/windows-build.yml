@@ -11,7 +11,7 @@ env:
   HIKARI_COMMIT_HASH: 'dfb9a48616df758fae88acf7fc426b9b208ba30d'
   VCPKG_COMMIT_ID: 'dd3097e305afa53f7b4312371f62058d2e665320'
   REVERSION:
-    '1'
+    '2'
 
 jobs:
   build-hikari-toolchain:
@@ -150,7 +150,7 @@ jobs:
             -DCMAKE_CXX_COMPILER="$env:HIKARI_BIN_PATH\clang-cl.exe" `
             -DCMAKE_LINKER="$env:HIKARI_BIN_PATH\lld-link.exe" `
             -DCMAKE_AR="$env:HIKARI_BIN_PATH\llvm-lib.exe" `
-            -DCMAKE_CXX_FLAGS="/EHsc /D_HAS_EXCEPTIONS=1 -mllvm -enable-bcfobf -mllvm -bcf_prob=80 -mllvm -enable-strcry -mllvm -enable-constenc -mllvm -constenc_times=3 -mllvm -enable-indibran -mllvm -enable-funcwra -mllvm -fw_prob=80 -mllvm -enable-adb -mllvm -adb_prob=90 -mllvm -enable-antihook -mllvm -ah_inline -Wno-shadow-uncaptured-local /WX-"
+            -DCMAKE_CXX_FLAGS="/EHsc /D_HAS_EXCEPTIONS=1 -mllvm -enable-bcfobf -mllvm -bcf_prob=80 -mllvm -enable-strcry -mllvm -enable-constenc -mllvm -constenc_times=3 -mllvm -enable-indibran -mllvm -enable-funcwra -mllvm -fw_prob=80 -mllvm -enable-adb -mllvm -adb_prob=90 -mllvm -enable-antihook -mllvm -ah_inline -Wno-shadow-uncaptured-local /Wno-error"
 
       - name: Build
         run: cmake --build build --config Release
