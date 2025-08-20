@@ -120,7 +120,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/vcpkg
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json') }}-${{ env.VCPKG_COMMIT_ID }}-hikari
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json') }}-${{ env.VCPKG_COMMIT_ID }}
 
       - name: Cài đặt dependencies với vcpkg
         if: steps.cache-vcpkg.outputs.cache-hit != 'true'
