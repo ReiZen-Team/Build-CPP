@@ -172,7 +172,7 @@ jobs:
             -DCMAKE_CXX_COMPILER="$env:HIKARI_BIN_PATH\clang-cl.exe" `
             -DCMAKE_LINKER="$env:HIKARI_BIN_PATH\lld-link.exe" `
             -DCMAKE_AR="$env:HIKARI_BIN_PATH\llvm-lib.exe" `
-            -DCMAKE_CXX_FLAGS="/EHsc /D_HAS_EXCEPTIONS=1 -Wno-error" `
+            -DCMAKE_CXX_FLAGS="/EHsc /D_HAS_EXCEPTIONS=1" `
             -DHIKARI=ON
 
       - name: Build
