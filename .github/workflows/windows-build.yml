@@ -13,7 +13,7 @@ env:
   REVERSION:
     '1'
   VCPKG_REVERSION:
-    '1'
+    '2'
 
 jobs:
   build-hikari-toolchain:
@@ -176,7 +176,7 @@ jobs:
             -DCMAKE_CXX_FLAGS="/EHsc /D_HAS_EXCEPTIONS=1 -Wno-error"
 
       - name: Build
-        run: cmake --build build --config Release -- -q
+        run: cmake --build build --config Release -- --quiet
         
       - name: Tải lên Artifact
         uses: actions/upload-artifact@v4
