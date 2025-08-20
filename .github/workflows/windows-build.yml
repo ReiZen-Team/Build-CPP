@@ -48,21 +48,23 @@ jobs:
           cd build
           
           cmake -G Ninja `
-            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/hikari-install `
+            -S ../llvm -B build `
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/hikari-install" `
             -DCMAKE_C_COMPILER=cl.exe `
             -DCMAKE_CXX_COMPILER=cl.exe `
             -DCMAKE_BUILD_TYPE=Release `
             -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded `
-            -DCMAKE_CXX_FLAGS="/MT" `
             -DLLVM_ENABLE_PROJECTS="clang;lld" `
             -DLLVM_TARGETS_TO_BUILD="X86" `
             -DLLVM_ENABLE_ZSTD=ON `
-            -DLLVM_INCLUDE_TESTS=ON `
-            -DLLVM_INCLUDE_EXAMPLES=ON `
-            -DLLVM_INCLUDE_UTILS=ON `
-            -DLLVM_INCLUDE_BENCHMARKS=ON `
+            -DLLVM_INCLUDE_TESTS=OFF `
+            -DLLVM_INCLUDE_EXAMPLES=OFF `
+            -DLLVM_INCLUDE_UTILS=OFF `
+            -DLLVM_INCLUDE_BENCHMARKS=OFF `
             -DLLVM_BUILD_TOOLS=ON `
-            ../llvm
+            -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON `
+            -DLLVM_OPTIMIZED_TABLEGEN=ON
+
             
           ninja
           
