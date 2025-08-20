@@ -10,6 +10,8 @@ on:
 env:
   HIKARI_COMMIT_HASH: 'dfb9a48616df758fae88acf7fc426b9b208ba30d'
   VCPKG_COMMIT_ID: 'dd3097e305afa53f7b4312371f62058d2e665320'
+  REVERSION:
+    '1'
 
 jobs:
   build-hikari-toolchain:
@@ -30,7 +32,7 @@ jobs:
         with:
           path: ${{ github.workspace }}/hikari-install
 
-          key: ${{ runner.os }}-hikari-${{ env.HIKARI_COMMIT_HASH }}-v3
+          key: ${{ runner.os }}-hikari-${{ env.HIKARI_COMMIT_HASH }}-${{ env.REVERSION }}
 
       - name: Build and Install Hikari LLVM
         if: steps.cache-hikari.outputs.cache-hit != 'true'
@@ -45,7 +47,6 @@ jobs:
           mkdir build
           cd build
           
-          # SỬA LỖI: Thêm CMAKE_INSTALL_PREFIX và build cả 'lld'
           cmake -G Ninja `
             -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/hikari-install `
             -DCMAKE_C_COMPILER=cl.exe `
@@ -55,24 +56,24 @@ jobs:
             -DCMAKE_CXX_FLAGS="/MT" `
             -DLLVM_ENABLE_PROJECTS="clang;lld" `
             -DLLVM_TARGETS_TO_BUILD="X86" `
-            -DLLVM_ENABLE_ZSTD=OFF `
-            -DLLVM_INCLUDE_TESTS=OFF `
-            -DLLVM_INCLUDE_EXAMPLES=OFF `
-            -DLLVM_INCLUDE_UTILS=OFF `
-            -DLLVM_INCLUDE_BENCHMARKS=OFF `
-            -DLLVM_BUILD_TOOLS=OFF `
+            -DLLVM_ENABLE_ZSTD=ON `
+            -DLLVM_INCLUDE_TESTS=ON `
+            -DLLVM_INCLUDE_EXAMPLES=ON `
+            -DLLVM_INCLUDE_UTILS=ON `
+            -DLLVM_INCLUDE_BENCHMARKS=ON `
+            -DLLVM_BUILD_TOOLS=ON `
             ../llvm
             
           ninja
           
           ninja install
 
-#       - name: 5. Upload Hikari Toolchain as Artifact
-#         if: steps.cache-hikari.outputs.cache-hit != 'true'
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: hikari-toolchain-windows
-#           path: ${{ github.workspace }}/hikari-install
+      - name: 5. Upload Hikari Toolchain as Artifact
+        if: steps.cache-hikari.outputs.cache-hit != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: hikari-toolchain-windows
+          path: ${{ github.workspace }}/hikari-install
 
   build-windows-app:
     name: Windows (with Hikari LLVM)
@@ -103,7 +104,7 @@ jobs:
         with:
           path: ${{ github.workspace }}/hikari-install
 
-          key: ${{ runner.os }}-hikari-${{ env.HIKARI_COMMIT_HASH }}-v3
+          key: ${{ runner.os }}-hikari-${{ env.HIKARI_COMMIT_HASH }}-${{ env.REVERSION }}
 
       - name: Set Hikari Environment Path
         shell: pwsh
