@@ -6,6 +6,10 @@
     "zlib",
     "libiconv",
     "libunistring",
-    "cpr"
+    {
+      "name": "cpr",
+      "default-features": false,
+      "features": [ "openssl" ]
+    }
   ]
 }

@@ -163,6 +163,7 @@ jobs:
       - name: Cấu hình CMake với Hikari LLVM
         env:
           VCPKG_TARGET_TRIPLET: x64-windows-static
+          CMAKE_MESSAGE_LOG_LEVEL: ERROR
         run: |
           cmake -B build -S . `
             -G "Ninja" `
@@ -175,8 +176,8 @@ jobs:
             -DCMAKE_CXX_FLAGS="/EHsc /D_HAS_EXCEPTIONS=1 -Wno-error"
 
       - name: Build
-        run: cmake --build build --config Release
-
+        run: cmake --build build --config Release -- -q
+        
       - name: Tải lên Artifact
         uses: actions/upload-artifact@v4
         with:
