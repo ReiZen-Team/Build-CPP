@@ -92,7 +92,7 @@ jobs:
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
           vcpkgDirectory: ${{ runner.temp }}/vcpkg
 
-      - name: 5. Upload Hikari Toolchain as Artifact
+      - name: Upload Hikari Toolchain as Artifact
         if: steps.cache-hikari.outputs.cache-hit != 'true'
         uses: actions/upload-artifact@v4
         with:
