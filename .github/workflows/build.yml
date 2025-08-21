@@ -141,26 +141,15 @@ jobs:
       - name: Protect
         shell: pwsh
         run: |
-          Copy-Item -Path "${{github.workspace}}/build/**/TouhouLWClient.exe" -Destination "${{github.workspace}}/Protect"
           Set-Location -Path "${{github.workspace}}/Protect"
+          Copy-Item -Path "${{github.workspace}}/build/**/TouhouLWClient.exe" -Destination .
+          
+          dir
 
-          $vmprotectCli = "${{github.workspace}}/Protect/cli.exe"
-          $vmprotectProject = "${{github.workspace}}/Protect/TouhouLWClient.vmp"
-          $licenseProject = "${{github.workspace}}/Protect/LICENSE.vmp"
-
-          $inputFile = "TouhouLWClient.exe"
-
-          $version = "${{ github.event.inputs.version || format('dev-{0}', github.sha) }}"
-          $outputFile = "Windows-x64-TouhouLWClient_${version}.exe"
-
-          Write-Host "Protecting file: $inputFile"
-
-          & $vmprotectCli $inputFile $outputFile -pf $vmprotectProject -lf $licenseProject
-
-          Write-Host "Protection complete. Output file: $outputFile"
+          .\cli.exe .\TouhouLWClient.exe .\Windows-x64-TouhouLWClient.exe -pf .\TouhouLWClient.vmp -lf .\LICENSE.vmp
 
       - name: Tải lên Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TouhouLWClient-windows-${{ github.event.inputs.version || format('dev-{0}', github.sha) }}
-          path: ${{github.workspace}}/Protect/Windows-x64-TouhouLWClient_${{ github.event.inputs.version || format('dev-{0}', github.sha) }}.exe
+          name: TouhouLWClient-windows-x64
+          path: Windows-x64-TouhouLWClient.exe
