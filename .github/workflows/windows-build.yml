@@ -177,7 +177,7 @@ jobs:
             -DHIKARI=ON
 
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build build --config Release --verbose
         
       - name: Tải lên Artifact
         uses: actions/upload-artifact@v4
