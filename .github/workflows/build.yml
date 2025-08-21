@@ -138,6 +138,12 @@ jobs:
       - name: Build
         run: cmake --build build --config Release -- --quiet
 
+      - name: Tải lên Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TouhouLWClient-windows-x64
+          path: TouhouLWClient.exe
+
       - name: Protect
         shell: pwsh
         run: |
@@ -151,5 +157,5 @@ jobs:
       - name: Tải lên Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TouhouLWClient-windows-x64
+          name: TouhouLWClient-windows-x64-protected
           path: Windows-x64-TouhouLWClient.exe
