@@ -1,17 +1,23 @@
 name: Build Touhou LostWord ClientAPI
 
 on:
-#   push:
-#     branches: [ "main" ]
-#   pull_request:
-#     branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
-
+    inputs:
+      version:
+        description: 'Tool version'
+        required: true
+        type: string
+        default: '1.0.1-1'
 env:
   VCPKG_COMMIT_ID: 'dd3097e305afa53f7b4312371f62058d2e665320'
 
 jobs:
   build-ubuntu-latest:
+    if: false
     name: Ubuntu (Latest)
     runs-on: ubuntu-latest
     steps:
@@ -84,6 +90,12 @@ jobs:
           path: source_repo
           token: ${{ secrets.GH_TOKEN }}
 
+      - uses: actions/checkout@v4
+        with:
+          repository: ReiZen-Team/CPPProtect
+          path: Protect
+          token: ${{ secrets.GH_TOKEN }}
+
       - name: Synchronize source code
         shell: pwsh
         run: Copy-Item -Path source_repo/CPP/* -Destination . -Recurse -Force
@@ -116,6 +128,7 @@ jobs:
       - name: Cấu hình CMake
         env:
           VCPKG_TARGET_TRIPLET: x64-windows-static
+          CMAKE_MESSAGE_LOG_LEVEL: ERROR
         run: |
           cmake -B build -S . `
             -G "Ninja" `
@@ -123,10 +136,31 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE=${{ runner.temp }}/vcpkg/scripts/buildsystems/vcpkg.cmake
 
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build build --config Release -- --quiet
+
+      - name: Protect
+        shell: pwsh
+        run: |
+          Copy-Item -Path "${{github.workspace}}/build/**/TouhouLWClient.exe" -Destination "${{github.workspace}}/Protect"
+          Set-Location -Path "${{github.workspace}}/Protect"
+
+          $vmprotectCli = "${{github.workspace}}/Protect/cli.exe"
+          $vmprotectProject = "${{github.workspace}}/Protect/TouhouLWClient.vmp"
+          $licenseProject = "${{github.workspace}}/Protect/LICENSE.vmp"
+
+          $inputFile = "TouhouLWClient.exe"
+
+          $version = "${{ github.event.inputs.version || format('dev-{0}', github.sha) }}"
+          $outputFile = "Windows-x64-TouhouLWClient_${version}.exe"
+
+          Write-Host "Protecting file: $inputFile"
+
+          & $vmprotectCli $inputFile $outputFile -pf $vmprotectProject -lf $licenseProject
+
+          Write-Host "Protection complete. Output file: $outputFile"
 
       - name: Tải lên Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TouhouLWClient-windows
-          path: ${{github.workspace}}/build/**/TouhouLWClient.exe
+          name: TouhouLWClient-windows-${{ github.event.inputs.version || format('dev-{0}', github.sha) }}
+          path: ${{github.workspace}}/Protect/Windows-x64-TouhouLWClient_${{ github.event.inputs.version || format('dev-{0}', github.sha) }}.exe
