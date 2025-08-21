@@ -136,19 +136,21 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE=${{ runner.temp }}/vcpkg/scripts/buildsystems/vcpkg.cmake
 
       - name: Build
-        run: cmake --build build --config Release -- --quiet
+        run: |
+          cmake --build build --config Release -- --quiet
+          dir ${{github.workspace}}/build ${{github.workspace}}/build/Release
 
       - name: Tải lên Artifact
         uses: actions/upload-artifact@v4
         with:
           name: TouhouLWClient-windows-x64
-          path: TouhouLWClient.exe
+          path: ${{github.workspace}}/build/Release/TouhouLWClient.exe
 
       - name: Protect
         shell: pwsh
         run: |
           Set-Location -Path "${{github.workspace}}/Protect"
-          Copy-Item -Path "${{github.workspace}}/build/**/TouhouLWClient.exe" -Destination .
+          Copy-Item -Path "${{github.workspace}}/build/Release/TouhouLWClient.exe" -Destination .
           
           dir
 
