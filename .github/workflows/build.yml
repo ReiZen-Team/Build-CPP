@@ -108,7 +108,8 @@ jobs:
           
       - uses: shogo82148/actions-setup-perl@v1
         with:
-          perl-version: "5.38"
+          perl-version: "5.32"
+          distribution: strawberry
           
       - name: Cài đặt Meson và Ninja (pip)
         run: pip install meson ninja
