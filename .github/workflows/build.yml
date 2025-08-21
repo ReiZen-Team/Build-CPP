@@ -104,6 +104,12 @@ jobs:
         with:
           arch: x64
           
+      - uses: ilammy/setup-nasm@v1
+          
+      - uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: "5.38"
+          
       - name: Cài đặt Meson và Ninja (pip)
         run: pip install meson ninja
 
