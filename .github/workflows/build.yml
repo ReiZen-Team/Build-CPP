@@ -99,10 +99,6 @@ jobs:
       - name: Synchronize source code
         shell: pwsh
         run: Copy-Item -Path source_repo/CPP/* -Destination . -Recurse -Force
-
-      - uses: TheMrMilchmann/setup-msvc-dev@v3
-        with:
-          arch: x64
           
       - uses: ilammy/setup-nasm@v1
           
@@ -111,6 +107,24 @@ jobs:
           perl-version: "5.32"
           distribution: strawberry
           
+      - uses: TheMrMilchmann/setup-msvc-dev@v3
+        with:
+          arch: x64
+
+      - name: Sanitize PATH
+        shell: powershell
+        run: |
+          $paths = $env:PATH -split ';' | Where-Object {
+            $_ -notmatch 'strawberry-perl\\[^\\]+\\x64\\c\\bin' -and  # <-- bỏ gcc.exe của Strawberry
+            $_ -notmatch 'Git\\usr\\bin' -and
+            $_ -notmatch 'MSYS' -and
+            $_ -notmatch 'Cygwin'
+          }
+          $env:PATH = ($paths + 'C:\Strawberry\perl\bin') -join ';'
+          echo "PATH=$env:PATH"
+          where cl
+          where perl
+
       - name: Cài đặt Meson và Ninja (pip)
         run: pip install meson ninja
 
@@ -136,6 +150,7 @@ jobs:
         env:
           VCPKG_TARGET_TRIPLET: x64-windows-static
           CMAKE_MESSAGE_LOG_LEVEL: ERROR
+          PERL: C:\Strawberry\perl\bin\perl.exe
         run: |
           cmake -B build -S . `
             -G "Ninja" `
