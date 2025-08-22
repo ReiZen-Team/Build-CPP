@@ -144,7 +144,7 @@ jobs:
       - name: Build
         run: |
           cmake --build build --config Release -- --quiet
-          Get-ChildItem -Path "D:\a\Build-CPP\Build-CPP\build", "D:\a\Build-CPP\Build-CPP\build\Release"
+          Get-ChildItem -Path "${{github.workspace}}\build", "${{github.workspace}}\build\Release"
 
       - name: Tải lên Artifact
         uses: actions/upload-artifact@v4
