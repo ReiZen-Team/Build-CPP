@@ -144,7 +144,7 @@ jobs:
       - name: Build
         run: |
           cmake --build build --config Release -- --quiet
-          dir ${{github.workspace}}/build ${{github.workspace}}/build/Release
+          Get-ChildItem -Path "D:\a\Build-CPP\Build-CPP\build", "D:\a\Build-CPP\Build-CPP\build\Release"
 
       - name: Tải lên Artifact
         uses: actions/upload-artifact@v4
@@ -155,8 +155,8 @@ jobs:
       - name: Protect
         shell: pwsh
         run: |
-          Set-Location -Path "${{github.workspace}}/Protect"
-          Copy-Item -Path "${{github.workspace}}/build/Release/TouhouLWClient.exe" -Destination .
+          Set-Location -Path "${{github.workspace}}\Protect"
+          Copy-Item -Path "${{github.workspace}}\build\Release\TouhouLWClient.exe" -Destination .
           
           dir
 
