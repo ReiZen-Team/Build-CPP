@@ -149,7 +149,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: TouhouLWClient-windows-x64
-          path: ${{github.workspace}}/build/TouhouLWClient.exe
+          path: "${{github.workspace}}/build/TouhouLWClient.exe"
 
       - name: Protect
         shell: pwsh
@@ -165,4 +165,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: TouhouLWClient-windows-x64-protected
-          path: Windows-x64-TouhouLWClient.exe
+          path: "${{github.workspace}}/Protect/Windows-x64-TouhouLWClient.exe"
