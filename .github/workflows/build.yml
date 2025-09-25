@@ -133,6 +133,13 @@ jobs:
           path: ${{github.workspace}}/build/_deps
           key: ${{ runner.os }}-cmake-TouhouLostWordClientAPI
 
+      - name: Cache cmake vcpkg_installed
+        id: cache-cmake-vcpkg_installed
+        uses: actions/cache@v4
+        with:
+          path: ${{github.workspace}}/build/vcpkg_installed
+          key: ${{ runner.os }}-cmake-vcpkg_installed-TouhouLostWordClientAPI
+
       - name: Config CMake
         env:
           VCPKG_TARGET_TRIPLET: x64-windows-static
