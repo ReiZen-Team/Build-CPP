@@ -175,14 +175,10 @@ jobs:
           signtool sign /f "${{ github.workspace }}\Protect\Cert\WINCert.pfx" /p "${{ secrets.CERT_PASSWORD }}" /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 "${{ github.workspace }}\Protect\Windows-x64-TouhouLWClient.exe"
           signtool sign /f "${{ github.workspace }}\Protect\Cert\WINCert.pfx" /p "${{ secrets.CERT_PASSWORD }}" /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 "${{ github.workspace }}\Protect\Windows-x64-TouhouLWClient-compiler.exe"
 
-      - name: Upload Artifact
+      - name: Upload artifacts (protected builds)
         uses: actions/upload-artifact@v4
         with:
           name: TouhouLWClient-windows-x64-protected
-          path: "${{github.workspace}}/Protect/Windows-x64-TouhouLWClient.exe"
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: TouhouLWClient-windows-x64-protected
-          path: "${{github.workspace}}/Protect/Windows-x64-TouhouLWClient-compiler.exe"
+          path: |
+            ${{ github.workspace }}/Protect/Windows-x64-TouhouLWClient.exe
+            ${{ github.workspace }}/Protect/Windows-x64-TouhouLWClient-compiler.exe
